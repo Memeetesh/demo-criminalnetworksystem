@@ -1,0 +1,63 @@
+{
+  "case_metadata": {
+    "agency": "Criminal Intelligence Bureau",
+    "classification": "CONFIDENTIAL",
+    "generated": "2024-01-15"
+  },
+  "reports": [
+    {
+      "report_id": "CR-2024-0001",
+      "date": "2024-01-05",
+      "type": "Drug Trafficking",
+      "location": "Mumbai, Maharashtra",
+      "description": "On the night of Jan 5th, surveillance intercepted Rajesh Kumar near the docks. He was seen transferring a suspicious package from a white van with plates MH-12-AB-1234 to Vikram Singh. Intelligence suggests Vikram Singh operates on behalf of the Coastal Syndicate. A wiretap recorded a transaction of ₹50,00,000 via a hawala operator. The contact number +91 98765 43210 was used repeatedly.",
+      "suspects": ["Rajesh Kumar", "Vikram Singh"],
+      "evidence": ["Wiretap", "Surveillance Footage"]
+    },
+    {
+      "report_id": "CR-2024-0002",
+      "date": "2024-01-08",
+      "type": "Organized Crime",
+      "location": "Pune, Maharashtra",
+      "description": "Vikram Singh was spotted meeting with Anil Desai, a known enforcer for the Coastal Syndicate, at a warehouse in Pune. Anil Desai arrived in an SUV bearing plates MH-14-XY-9876. They discussed expanding operations into the cyber sector. Payments totaling ₹25,00,000 were discussed. Another phone number +91 91234 56789 was recovered from an informant.",
+      "suspects": ["Vikram Singh", "Anil Desai"],
+      "evidence": ["Informant Report"]
+    },
+    {
+      "report_id": "CR-2024-0003",
+      "date": "2024-01-12",
+      "type": "Cybercrime",
+      "location": "Bengaluru, Karnataka",
+      "description": "A major phishing operation was dismantled in Bengaluru. The mastermind, Sunita Rao, was found to have funneled over ₹1,00,00,000 to offshore accounts. Digital forensics linked her server IP to Anil Desai. Sunita Rao was using the alias 'DarkWebQueen'. An associated vehicle, KA-01-MN-4567, was impounded.",
+      "suspects": ["Sunita Rao", "Anil Desai"],
+      "evidence": ["Server Logs"]
+    },
+    {
+      "report_id": "CR-2024-0004",
+      "date": "2024-01-15",
+      "type": "Arms Dealing",
+      "location": "Hyderabad, Telangana",
+      "description": "Arms dealer Tariq Khan was apprehended with illegal firearms. Interrogation revealed he supplied weapons to the Coastal Syndicate. Tariq Khan frequently contacted +91 98765 43210, the same number used by Rajesh Kumar. He was apprehended in a vehicle with plates TS-09-CD-3456.",
+      "suspects": ["Tariq Khan", "Rajesh Kumar"],
+      "evidence": ["Confession", "Call Records"]
+    },
+    {
+      "report_id": "CR-2024-0005",
+      "date": "2024-01-18",
+      "type": "Money Laundering",
+      "location": "Mumbai, Maharashtra",
+      "description": "Financial audits uncovered a shell company, Global Exports Ltd, run by Manoj Gupta. Manoj Gupta was laundering funds for Tariq Khan and Sunita Rao. Over ₹5,00,00,000 was moved in the last quarter. The registered phone for the company is +91 99887 76655.",
+      "suspects": ["Manoj Gupta", "Tariq Khan", "Sunita Rao"],
+      "evidence": ["Bank Statements", "Audit Reports"]
+    },
+    {
+      "report_id": "CR-2024-0006",
+      "date": "2024-01-20",
+      "type": "Drug Trafficking",
+      "location": "Goa",
+      "description": "A drug bust at a rave party in Goa led to the arrest of David Fernandez. David was found with narcotics sourced from the Coastal Syndicate. He named Vikram Singh as his supplier. The drop was coordinated using a vehicle MH-12-AB-1234. An amount of ₹15,00,000 was seized.",
+      "suspects": ["David Fernandez", "Vikram Singh"],
+      "evidence": ["Narcotics Seizure", "Witness Statement"]
+    }
+  ]
+}

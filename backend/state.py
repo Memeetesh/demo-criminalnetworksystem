@@ -1,0 +1,11 @@
+class AppState:
+    def __init__(self):
+        self.entities = {}  # entity_id -> entity_data
+        self.relationships = []  # list of edge dicts
+        self.graph = None  # NetworkX graph
+        self.upload_history = []  # list of upload records
+        self.analysis_results = {}  # cached analysis
+        self.temporal_data = []  # temporal records
+        self.pattern_results = {'phones': [], 'vehicles': [], 'emails': [], 'money': [], 'dates': []}
+
+state = AppState()
