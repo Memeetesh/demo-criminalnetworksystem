@@ -33,4 +33,4 @@ python app.py
 Server runs on port 5000. Access endpoints at `http://localhost:5000/api/...`
 
 ## Tech Stack
-- Flask, NetworkX, Transformers (BERT)
+- Flask, NetworkX, Transformers (BERT), Cytoscape.js, Neo4j.
