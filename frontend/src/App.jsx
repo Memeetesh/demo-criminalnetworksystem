@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import './index.css';
+
 import Navbar from './components/Navbar';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
@@ -7,133 +9,113 @@ import ExtractedEntitiesView from './components/ExtractedEntitiesView';
 import SuspiciousPatternsView from './components/SuspiciousPatternsView';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('graph'); // 'graph' | 'entities' | 'alerts'
-  const [statusText, setStatusText] = useState('System Online');
-  const [statusType, setStatusType] = useState('info'); // 'info' | 'success' | 'error'
-  const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('graph');
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
 
-  // Data states
+  // Data
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [entities, setEntities] = useState({});
   const [networkStats, setNetworkStats] = useState({});
   const [keyPlayers, setKeyPlayers] = useState([]);
   const [communities, setCommunities] = useState([]);
   const [suspiciousAlerts, setSuspiciousAlerts] = useState([]);
-  const [selectedNode, setSelectedNode] = useState(null);
 
-  // Filters & Controls
+  // Interaction
+  const [selectedNode, setSelectedNode] = useState(null);
   const [filters, setFilters] = useState({
-    PERSON: true,
-    LOCATION: true,
-    ORGANIZATION: true,
-    VEHICLE: true,
-    PHONE: true,
-    EMAIL: true
+    PERSON: true, LOCATION: true, ORGANIZATION: true,
+    VEHICLE: true, PHONE: true, EMAIL: true, MISC: true
   });
   const [layoutName, setLayoutName] = useState('cose-bilkent');
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedPath, setHighlightedPath] = useState([]);
+  const [statusText, setStatusText] = useState('System Ready');
+  const [statusType, setStatusType] = useState('info');
+  const [uploading, setUploading] = useState(false);
 
-  // Fetch initial graph & intelligence data on load
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const fileInputRef = useRef(null);
 
+  // Toast
+  const showToast = (text, type = 'info') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
+
+  // Fetch all data
   const fetchAllData = async () => {
-    setStatusText('Fetching network data...');
+    setStatusText('Fetching intelligence data...');
     setStatusType('info');
-
     try {
-      // 1. Fetch graph data
-      const graphRes = await fetch('/api/network/graph');
-      if (graphRes.ok) {
-        const data = await graphRes.json();
-        setGraphData(data);
-      }
+      const [graphRes, statsRes, centralityRes, commRes, suspiciousRes, entitiesRes] =
+        await Promise.all([
+          fetch('/api/network/graph').catch(() => ({ ok: false })),
+          fetch('/api/analysis/summary').catch(() => ({ ok: false })),
+          fetch('/api/analysis/centrality').catch(() => ({ ok: false })),
+          fetch('/api/analysis/communities').catch(() => ({ ok: false })),
+          fetch('/api/patterns/suspicious').catch(() => ({ ok: false })),
+          fetch('/api/entities?limit=200').catch(() => ({ ok: false })),
+        ]);
 
-      // 2. Fetch stats
-      const statsRes = await fetch('/api/analysis/summary');
-      if (statsRes.ok) {
-        const stats = await statsRes.json();
-        setNetworkStats(stats);
-      }
-
-      // 3. Fetch key players
-      const centralityRes = await fetch('/api/analysis/centrality');
-      if (centralityRes.ok) {
-        const players = await centralityRes.json();
-        setKeyPlayers(players);
-      }
-
-      // 4. Fetch communities
-      const commRes = await fetch('/api/analysis/communities');
-      if (commRes.ok) {
-        const comms = await commRes.json();
-        setCommunities(comms);
-      }
-
-      // 5. Fetch suspicious alerts
-      const suspiciousRes = await fetch('/api/patterns/suspicious');
-      if (suspiciousRes.ok) {
-        const alerts = await suspiciousRes.json();
-        setSuspiciousAlerts(alerts);
-      }
-
-      // 6. Fetch entities list
-      const entitiesRes = await fetch('/api/entities?limit=200');
+      if (graphRes.ok) setGraphData(await graphRes.json());
+      if (statsRes.ok) setNetworkStats(await statsRes.json());
+      if (centralityRes.ok) setKeyPlayers(await centralityRes.json());
+      if (commRes.ok) setCommunities(await commRes.json());
+      if (suspiciousRes.ok) setSuspiciousAlerts(await suspiciousRes.json());
       if (entitiesRes.ok) {
         const entData = await entitiesRes.json();
+        // API returns { entities: [...] } — store as map for dossier, keep array for sidebar
         const entMap = {};
-        (entData.entities || []).forEach(e => { entMap[e.id] = e; });
+        (entData.entities || entData || []).forEach(e => { entMap[e.id] = e; });
         setEntities(entMap);
       }
 
       setStatusText('Network Data Loaded');
       setStatusType('success');
     } catch (err) {
-      console.error('Data fetch error:', err);
+      console.error('Fetch error:', err);
       setStatusText('Backend Connection Idle');
       setStatusType('info');
     }
   };
 
-  // Handle File Ingestion
+  useEffect(() => { fetchAllData(); }, []);
+
+  // Upload
   const handleFileUpload = async (file) => {
+    if (!file) return;
     setUploading(true);
+    setShowUploadModal(false);
     setStatusText(`Ingesting ${file.name}...`);
     setStatusType('info');
+    showToast(`Processing ${file.name}...`, 'info');
 
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
+      const res = await fetch('/api/upload', { method: 'POST', body: formData });
       if (!res.ok) throw new Error('Upload failed');
       const result = await res.json();
-
-      setStatusText(`Uploaded & Analyzed: ${result.record?.summary?.entities_extracted || 0} entities`);
+      const count = result.record?.summary?.entities_extracted || 0;
+      setStatusText(`Analyzed: ${count} entities extracted`);
       setStatusType('success');
-
-      // Refresh all analytics & graph
-      setTimeout(() => {
-        fetchAllData();
-      }, 500);
+      showToast(`Success! ${count} entities extracted from ${file.name}`, 'success');
+      setTimeout(() => fetchAllData(), 500);
     } catch (err) {
       console.error('Upload error:', err);
       setStatusText('Upload Failed');
       setStatusType('error');
+      showToast('Upload failed. Check backend connection.', 'error');
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  // Handle Pathfinder Trace
+  // Pathfinder
   const handleFindPath = async (sourceId, targetId) => {
-    setStatusText(`Tracing path: ${sourceId} ➔ ${targetId}...`);
+    setStatusText(`Tracing path: ${sourceId} → ${targetId}...`);
     try {
       const res = await fetch(`/api/network/path/${sourceId}/${targetId}`);
       if (res.ok) {
@@ -142,9 +124,11 @@ export default function App() {
           setHighlightedPath(data.path_nodes);
           setStatusText(`Path found: ${data.hop_count} hops`);
           setStatusType('success');
+          showToast(`Path traced: ${data.hop_count} hops`, 'success');
         } else {
-          setStatusText('No connected path found between nodes');
+          setStatusText('No path found');
           setStatusType('error');
+          showToast('No connected path found between those entities', 'error');
         }
       }
     } catch (err) {
@@ -154,80 +138,140 @@ export default function App() {
     }
   };
 
+  // Drag handlers for modal
+  const handleDragOver = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); };
+  const handleDragLeave = (e) => { e.currentTarget.classList.remove('drag-over'); };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileUpload(file);
+  };
+
+  // Convert entity map to array for components that need it
+  const entitiesArray = Object.values(entities);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-      {/* Top Navbar */}
+    <div className="app-container">
+      {/* Hidden global file input */}
+      <input
+        type="file"
+        id="file-upload-input"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept=".csv,.json,.pdf"
+        onChange={(e) => handleFileUpload(e.target.files[0])}
+      />
+
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         statusText={statusText}
         statusType={statusType}
-        onUploadClick={() => document.getElementById('file-upload-input')?.click()}
+        onUploadClick={() => setShowUploadModal(true)}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
       />
 
-      {/* Main Content Area */}
-      <div style={{ display: 'flex', flex: 1, position: 'relative', overflow: 'hidden' }}>
-        
-        {/* Tab 1: Network Graph Canvas & Control Sidebars */}
+      <div className="main-grid">
         {activeTab === 'graph' && (
-          <>
-            <LeftSidebar
-              filters={filters}
-              setFilters={setFilters}
-              layoutName={layoutName}
-              setLayoutName={setLayoutName}
-              onFileUpload={handleFileUpload}
-              uploading={uploading}
-              entities={entities}
-              onFindPath={handleFindPath}
-            />
-
-            <main style={{ flex: 1, height: '100%', position: 'relative' }}>
-              <GraphCanvas
-                graphData={graphData}
-                filters={filters}
-                layoutName={layoutName}
-                onNodeSelect={(nodeData) => setSelectedNode(nodeData)}
-                searchQuery={searchQuery}
-                highlightedPath={highlightedPath}
-              />
-            </main>
-
-            <RightSidebar
-              selectedNode={selectedNode}
-              networkStats={networkStats}
-              keyPlayers={keyPlayers}
-              communities={communities}
-              suspiciousAlerts={suspiciousAlerts}
-              onNodeSelect={(node) => setSelectedNode(node)}
-            />
-          </>
-        )}
-
-        {/* Tab 2: Extracted Entities Database View */}
-        {activeTab === 'entities' && (
-          <ExtractedEntitiesView
-            entities={entities}
-            onNodeSelect={(entity) => {
-              setSelectedNode(entity);
-              setActiveTab('graph');
-            }}
+          <LeftSidebar
+            filters={filters}
+            setFilters={setFilters}
+            layoutName={layoutName}
+            setLayoutName={setLayoutName}
+            onFileUpload={handleFileUpload}
+            uploading={uploading}
+            entities={entitiesArray}
+            onFindPath={handleFindPath}
           />
         )}
 
-        {/* Tab 3: Suspicious Risk Alerts View */}
-        {activeTab === 'alerts' && (
-          <SuspiciousPatternsView
+        <div className="main-content">
+          {activeTab === 'graph' && (
+            <GraphCanvas
+              graphData={graphData}
+              filters={filters}
+              layoutName={layoutName}
+              onNodeSelect={(nodeData) => setSelectedNode(nodeData)}
+              searchQuery={searchQuery}
+              highlightedPath={highlightedPath}
+            />
+          )}
+
+          {activeTab === 'entities' && (
+            <ExtractedEntitiesView
+              entities={entities}
+              onNodeSelect={(entity) => {
+                setSelectedNode(entity);
+                setActiveTab('graph');
+              }}
+            />
+          )}
+
+          {activeTab === 'alerts' && (
+            <SuspiciousPatternsView
+              suspiciousAlerts={suspiciousAlerts}
+              onNodeSelect={(alert) => {
+                setSelectedNode(alert);
+                setActiveTab('graph');
+              }}
+            />
+          )}
+        </div>
+
+        {activeTab === 'graph' && (
+          <RightSidebar
+            selectedNode={selectedNode}
+            networkStats={networkStats}
+            keyPlayers={keyPlayers}
+            communities={communities}
             suspiciousAlerts={suspiciousAlerts}
-            onNodeSelect={(alert) => {
-              setSelectedNode(alert);
-              setActiveTab('graph');
-            }}
+            onNodeSelect={(node) => setSelectedNode(node)}
           />
         )}
       </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="upload-modal-overlay" onClick={() => setShowUploadModal(false)}>
+          <div className="glass-panel upload-modal-content animate-fade-in" onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: '16px', fontSize: '1.1rem', fontWeight: 600 }}>Ingest Intelligence Data</h3>
+            <div
+              className="upload-dropzone"
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📂</div>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                Drag & drop case files here
+              </p>
+              <p style={{ color: 'var(--cyan)', fontSize: '0.85rem', cursor: 'pointer' }}>
+                or click to browse files
+              </p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '12px' }}>
+                Supports CSV, JSON, PDF
+              </p>
+            </div>
+            {uploading && (
+              <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="pulse-dot" />
+                <span style={{ fontSize: '0.9rem', color: 'var(--cyan)' }}>Uploading and analyzing...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toastMessage && (
+        <div className={`toast-notification animate-fade-in toast-${toastMessage.type}`}>
+          {toastMessage.type === 'error' ? '⚠️' : toastMessage.type === 'success' ? '✅' : 'ℹ️'}
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
     </div>
   );
 }

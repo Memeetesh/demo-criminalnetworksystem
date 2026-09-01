@@ -14,6 +14,14 @@ class EntityExtractor:
     Lazy-loads the model.
     """
 
+    # Map BERT NER output labels to frontend display types
+    ENTITY_TYPE_MAP = {
+        'PER': 'PERSON',
+        'LOC': 'LOCATION',
+        'ORG': 'ORGANIZATION',
+        'MISC': 'MISC',
+    }
+
     def __init__(self, model_name: str = "dslim/bert-base-NER", aggregation_strategy: str = "simple"):
         """
         Initialize the EntityExtractor.
@@ -90,13 +98,16 @@ class EntityExtractor:
                 continue
             if len(word) <= 1:
                 continue
+            # Skip BERT WordPiece subword fragments
+            if word.startswith('##'):
+                continue
 
             # Deduplicate by text+type
             key = (word.lower(), entity_group)
             if key not in unique_entities:
                 unique_entities.add(key)
                 filtered_entities.append({
-                    "entity_type": entity_group,
+                    "entity_type": self.ENTITY_TYPE_MAP.get(entity_group, entity_group),
                     "text": word,
                     "confidence": float(score),
                     "start": ent.get("start", -1),

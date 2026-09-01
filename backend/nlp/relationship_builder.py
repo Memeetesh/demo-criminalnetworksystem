@@ -38,17 +38,23 @@ class RelationshipBuilder:
         """
         Determines the relationship type between two entity types.
         """
-        types = {type1, type2}
-        if types == {"PER", "LOC"}:
+        # Normalize to handle both short (PER) and long (PERSON) forms
+        normalize = {'PER': 'PERSON', 'LOC': 'LOCATION', 'ORG': 'ORGANIZATION'}
+        t1 = normalize.get(type1, type1)
+        t2 = normalize.get(type2, type2)
+        types = {t1, t2}
+        if types == {"PERSON", "LOCATION"}:
             return "LOCATED_AT"
-        if types == {"PER", "VEHICLE"}:
+        if types == {"PERSON", "VEHICLE"}:
             return "OWNS_VEHICLE"
-        if types == {"PER", "PHONE"}:
+        if types == {"PERSON", "PHONE"}:
             return "USES_PHONE"
-        if types == {"PER", "ORG"}:
+        if types == {"PERSON", "ORGANIZATION"}:
             return "MEMBER_OF"
-        if types == {"PER", "PER"}:
+        if types == {"PERSON", "PERSON"}:
             return "ASSOCIATES_WITH"
+        if types == {"PERSON", "EMAIL"}:
+            return "USES_EMAIL"
         return "ASSOCIATES_WITH"
 
     def _add_edge(self, source_key: str, target_key: str, rel_type: str, doc_id: str):
@@ -56,7 +62,7 @@ class RelationshipBuilder:
         source_ent = self._entity_registry[source_key]
         target_ent = self._entity_registry[target_key]
         
-        if target_ent["type"] == "PER" and source_ent["type"] != "PER":
+        if target_ent["type"] in ("PER", "PERSON") and source_ent["type"] not in ("PER", "PERSON"):
             source_key, target_key = target_key, source_key
 
         edge_key = (source_key, target_key, rel_type)

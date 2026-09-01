@@ -1,271 +1,277 @@
-import React, { useState } from 'react';
-import { Upload, Filter, Layers, Navigation, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  UploadCloud, 
+  Check, 
+  ChevronLeft, 
+  ChevronRight, 
+  Share2, 
+  Circle, 
+  Grid, 
+  Cpu, 
+  Search, 
+  Map 
+} from 'lucide-react';
 
-const ENTITY_TYPES = [
-  { key: 'PERSON', label: 'Persons', color: '#ff6b9d' },
-  { key: 'LOCATION', label: 'Locations', color: '#00e676' },
-  { key: 'ORGANIZATION', label: 'Organizations', color: '#7c4dff' },
-  { key: 'VEHICLE', label: 'Vehicles', color: '#448aff' },
-  { key: 'PHONE', label: 'Phones', color: '#ff9100' },
-  { key: 'EMAIL', label: 'Emails', color: '#e040fb' }
-];
+const ENTITY_COLORS = {
+  PERSON: '#ff6b9d',
+  LOCATION: '#00e676',
+  ORGANIZATION: '#7c4dff',
+  VEHICLE: '#448aff',
+  PHONE: '#ff9100',
+  EMAIL: '#e040fb',
+  MISC: '#8892a4'
+};
 
-export default function LeftSidebar({
-  filters,
-  setFilters,
-  layoutName,
-  setLayoutName,
-  onFileUpload,
-  uploading,
-  entities,
-  onFindPath
-}) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [sourceEntity, setSourceEntity] = useState('');
-  const [targetEntity, setTargetEntity] = useState('');
-  const [dragOver, setDragOver] = useState(false);
+const LeftSidebar = ({ 
+  filters, 
+  setFilters, 
+  layoutName, 
+  setLayoutName, 
+  onFileUpload, 
+  uploading, 
+  entities = [], 
+  onFindPath 
+}) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [sourceNode, setSourceNode] = useState('');
+  const [targetNode, setTargetNode] = useState('');
+  const [isDragActive, setIsDragActive] = useState(false);
 
-  const handleFilterToggle = (key) => {
-    setFilters(prev => ({ ...prev, [key]: !prev[key] }));
+  // Responsive logic
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1200 && window.innerWidth >= 768) {
+        setIsCollapsed(true);
+      } else if (window.innerWidth >= 1200) {
+        setIsCollapsed(false);
+      }
+    };
+    
+    // Set initial state
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setIsDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setIsDragActive(false);
+    }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+    e.stopPropagation();
+    setIsDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       onFileUpload(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
+    if (e.target.files && e.target.files[0]) {
       onFileUpload(e.target.files[0]);
     }
   };
 
-  const handlePathSearch = () => {
-    if (sourceEntity && targetEntity) {
-      onFindPath(sourceEntity, targetEntity);
+  const toggleFilter = (type) => {
+    setFilters(prev => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const handleTracePath = () => {
+    if (sourceNode && targetNode && onFindPath) {
+      onFindPath(sourceNode, targetNode);
     }
   };
 
-  if (collapsed) {
+  if (isCollapsed) {
     return (
-      <div style={{
-        position: 'absolute',
-        left: '12px',
-        top: '72px',
-        zIndex: 90
-      }}>
-        <button
-          onClick={() => setCollapsed(false)}
-          className="glass-panel"
-          style={{
-            padding: '10px',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-        >
-          <ChevronRight size={18} />
+      <div className="glass-panel sidebar-left" style={{ width: '60px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1rem 0' }}>
+        <button className="btn-action" onClick={() => setIsCollapsed(false)} style={{ marginBottom: '2rem' }}>
+          <ChevronRight size={20} />
         </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', color: '#8892a4' }}>
+          <UploadCloud size={24} title="Data Ingestion" />
+          <Search size={24} title="Filters" />
+          <Share2 size={24} title="Layout" />
+          <Map size={24} title="Pathfinder" />
+        </div>
       </div>
     );
   }
 
   return (
-    <aside style={{
-      width: '280px',
-      height: 'calc(100vh - 60px)',
-      background: 'rgba(10, 13, 26, 0.85)',
-      backdropFilter: 'blur(16px)',
-      borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-      padding: '16px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '16px',
-      overflowY: 'auto',
-      zIndex: 80,
-      position: 'relative'
-    }}>
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setCollapsed(true)}
-        style={{
-          position: 'absolute',
-          right: '12px',
-          top: '16px',
-          background: 'none',
-          border: 'none',
-          color: '#8492a6',
-          cursor: 'pointer'
-        }}
-      >
-        <ChevronLeft size={16} />
-      </button>
-
-      {/* 1. Data Ingestion Panel */}
-      <div className="glass-panel" style={{ padding: '14px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Upload size={14} style={{ color: '#00f0ff' }} /> Data Ingestion
-        </h3>
-
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          style={{
-            border: `2px dashed ${dragOver ? '#00f0ff' : 'rgba(255, 255, 255, 0.15)'}`,
-            borderRadius: '8px',
-            padding: '16px',
-            textAlign: 'center',
-            background: dragOver ? 'rgba(0, 240, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-            transition: 'all 0.2s ease',
-            cursor: 'pointer'
-          }}
-          onClick={() => document.getElementById('file-upload-input').click()}
-        >
-          <input
-            id="file-upload-input"
-            type="file"
-            accept=".csv,.json,.pdf"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          <p style={{ fontSize: '12px', fontWeight: 600, color: '#fff', marginBottom: '4px' }}>
-            {uploading ? 'Processing...' : 'Drag & Drop files'}
-          </p>
-          <p style={{ fontSize: '10px', color: '#8492a6' }}>Supports CSV, JSON, PDF</p>
-        </div>
+    <div className="glass-panel sidebar-left" style={{ width: '320px', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <h2 style={{ fontSize: '1.1rem', margin: 0, fontWeight: 600 }}>Controls</h2>
+        <button className="btn-action" onClick={() => setIsCollapsed(true)}>
+          <ChevronLeft size={20} />
+        </button>
       </div>
 
-      {/* 2. Entity Filters */}
-      <div className="glass-panel" style={{ padding: '14px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Filter size={14} style={{ color: '#00ff88' }} /> Entity Filters
-        </h3>
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        
+        {/* Section 1 - Data Ingestion */}
+        <section>
+          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: '#8892a4', letterSpacing: '1px', marginBottom: '0.75rem' }}>
+            Data Ingestion
+          </h3>
+          <div 
+            className={`drop-zone ${isDragActive ? 'active' : ''}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            style={{
+              border: `2px dashed ${isDragActive ? '#00e5ff' : 'rgba(255,255,255,0.1)'}`,
+              borderRadius: '8px',
+              padding: '1.5rem 1rem',
+              textAlign: 'center',
+              backgroundColor: isDragActive ? 'rgba(0, 229, 255, 0.05)' : 'rgba(0,0,0,0.2)',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onClick={() => document.getElementById('sidebar-file-input').click()}
+          >
+            <input 
+              type="file" 
+              id="sidebar-file-input" 
+              style={{ display: 'none' }} 
+              onChange={handleFileChange}
+              accept=".pdf,.json,.csv"
+            />
+            <UploadCloud size={32} style={{ color: isDragActive ? '#00e5ff' : '#8892a4', marginBottom: '0.5rem' }} />
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#e5e7eb' }}>
+              {uploading ? 'Processing...' : 'Drag & drop text or JSON files here'}
+            </p>
+            <span style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem', display: 'block' }}>
+              or click to browse
+            </span>
+          </div>
+        </section>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {ENTITY_TYPES.map(({ key, label, color }) => {
-            const active = filters[key] !== false;
-            return (
-              <div
-                key={key}
-                onClick={() => handleFilterToggle(key)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  background: active ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
-                  cursor: 'pointer',
-                  border: `1px solid ${active ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '2px', backgroundColor: color }} />
-                  <span style={{ fontSize: '12px', color: active ? '#fff' : '#64748b' }}>{label}</span>
+        {/* Section 2 - Entity Filters */}
+        <section>
+          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: '#8892a4', letterSpacing: '1px', marginBottom: '0.75rem' }}>
+            Entity Filters
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {Object.entries(ENTITY_COLORS).map(([type, color]) => {
+              const isActive = filters ? filters[type] !== false : true;
+              return (
+                <div 
+                  key={type}
+                  onClick={() => toggleFilter(type)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.5rem 0.75rem', borderRadius: '6px', cursor: 'pointer',
+                    backgroundColor: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color }} />
+                    <span style={{ fontSize: '0.85rem', color: isActive ? '#fff' : '#6b7280' }}>{type}</span>
+                  </div>
+                  {isActive && <Check size={14} style={{ color }} />}
                 </div>
-                {active && <Check size={12} style={{ color: '#00ff88' }} />}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
+        </section>
 
-      {/* 3. Layout Controls */}
-      <div className="glass-panel" style={{ padding: '14px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Layers size={14} style={{ color: '#a060ff' }} /> Graph Layout
-        </h3>
+        {/* Section 3 - Graph Layout */}
+        <section>
+          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: '#8892a4', letterSpacing: '1px', marginBottom: '0.75rem' }}>
+            Graph Layout
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            {[
+              { id: 'cose-bilkent', label: 'Force Physics', icon: Share2 },
+              { id: 'concentric', label: 'Concentric', icon: Circle },
+              { id: 'circle', label: 'Circular', icon: Cpu },
+              { id: 'grid', label: 'Grid', icon: Grid }
+            ].map(layout => {
+              const Icon = layout.icon;
+              const isActive = layoutName === layout.id;
+              return (
+                <button
+                  key={layout.id}
+                  onClick={() => setLayoutName(layout.id)}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.75rem', borderRadius: '6px', border: '1px solid',
+                    backgroundColor: isActive ? 'rgba(0, 229, 255, 0.1)' : 'rgba(0,0,0,0.2)',
+                    borderColor: isActive ? '#00e5ff' : 'rgba(255,255,255,0.05)',
+                    color: isActive ? '#00e5ff' : '#8892a4',
+                    cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >
+                  <Icon size={20} />
+                  <span style={{ fontSize: '0.75rem' }}>{layout.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-          {[
-            { id: 'cose-bilkent', label: 'Force Physics' },
-            { id: 'concentric', label: 'Concentric' },
-            { id: 'circle', label: 'Circular' },
-            { id: 'grid', label: 'Grid' }
-          ].map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => setLayoutName(id)}
-              className={`btn-action ${layoutName === id ? 'active' : ''}`}
-              style={{ justifyContent: 'center', fontSize: '11px' }}
+        {/* Section 4 - Pathfinder */}
+        <section>
+          <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: '#8892a4', letterSpacing: '1px', marginBottom: '0.75rem' }}>
+            Pathfinder
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <select 
+              value={sourceNode} 
+              onChange={(e) => setSourceNode(e.target.value)}
+              style={{ 
+                width: '100%', padding: '0.5rem', borderRadius: '4px', 
+                backgroundColor: 'rgba(0,0,0,0.3)', color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.1)', outline: 'none'
+              }}
             >
-              {label}
+              <option value="">Select Source Entity...</option>
+              {entities.map(n => <option key={`src-${n.id}`} value={n.id}>{n.label || n.id}</option>)}
+            </select>
+            
+            <select 
+              value={targetNode} 
+              onChange={(e) => setTargetNode(e.target.value)}
+              style={{ 
+                width: '100%', padding: '0.5rem', borderRadius: '4px', 
+                backgroundColor: 'rgba(0,0,0,0.3)', color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.1)', outline: 'none'
+              }}
+            >
+              <option value="">Select Target Entity...</option>
+              {entities.map(n => <option key={`tgt-${n.id}`} value={n.id}>{n.label || n.id}</option>)}
+            </select>
+            
+            <button 
+              className="btn-primary" 
+              onClick={handleTracePath}
+              disabled={!sourceNode || !targetNode}
+              style={{ 
+                opacity: (!sourceNode || !targetNode) ? 0.5 : 1,
+                cursor: (!sourceNode || !targetNode) ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Trace Path
             </button>
-          ))}
-        </div>
+          </div>
+        </section>
+
       </div>
-
-      {/* 4. Shortest Pathfinder Tool */}
-      <div className="glass-panel" style={{ padding: '14px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Navigation size={14} style={{ color: '#ffb703' }} /> Pathfinder Trace
-        </h3>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <select
-            value={sourceEntity}
-            onChange={(e) => setSourceEntity(e.target.value)}
-            style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '6px',
-              color: '#fff',
-              padding: '6px 10px',
-              fontSize: '11px',
-              outline: 'none'
-            }}
-          >
-            <option value="" style={{ background: '#0a0d1a' }}>Select Source Entity...</option>
-            {Object.values(entities || {}).map(e => (
-              <option key={e.id} value={e.id} style={{ background: '#0a0d1a' }}>
-                {e.name || e.label || e.id} ({e.type})
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={targetEntity}
-            onChange={(e) => setTargetEntity(e.target.value)}
-            style={{
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '6px',
-              color: '#fff',
-              padding: '6px 10px',
-              fontSize: '11px',
-              outline: 'none'
-            }}
-          >
-            <option value="" style={{ background: '#0a0d1a' }}>Select Target Entity...</option>
-            {Object.values(entities || {}).map(e => (
-              <option key={e.id} value={e.id} style={{ background: '#0a0d1a' }}>
-                {e.name || e.label || e.id} ({e.type})
-              </option>
-            ))}
-          </select>
-
-          <button
-            onClick={handlePathSearch}
-            disabled={!sourceEntity || !targetEntity}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              fontSize: '11px',
-              padding: '7px',
-              opacity: (!sourceEntity || !targetEntity) ? 0.5 : 1
-            }}
-          >
-            Trace Path
-          </button>
-        </div>
-      </div>
-    </aside>
+    </div>
   );
-}
+};
+
+export default LeftSidebar;

@@ -12,6 +12,8 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
+_cached_extractor = None
+
 upload_bp = Blueprint('upload', __name__, url_prefix='/api/upload')
 
 
@@ -73,7 +75,10 @@ def process_file(filepath: str, filename: str) -> dict:
 
     # ── Step 2: Extract entities (NER) ──────────────────────────────────
     from backend.nlp.entity_extractor import EntityExtractor
-    extractor = EntityExtractor(model_name=current_app.config.get('NER_MODEL', 'dslim/bert-base-NER'))
+    global _cached_extractor
+    if _cached_extractor is None:
+        _cached_extractor = EntityExtractor(model_name=current_app.config.get('NER_MODEL', 'dslim/bert-base-NER'))
+    extractor = _cached_extractor
 
     entity_sets = []
     for doc in texts:

@@ -8,4 +8,13 @@ class AppState:
         self.temporal_data = []  # temporal records
         self.pattern_results = {'phones': [], 'vehicles': [], 'emails': [], 'money': [], 'dates': []}
 
+    def reset(self):
+        """Reset all state for a fresh analysis."""
+        self.entities = {}
+        self.relationships = []
+        self.graph = None
+        self.analysis_results = {}
+        self.temporal_data = []
+        self.pattern_results = {'phones': [], 'vehicles': [], 'emails': [], 'money': [], 'dates': []}
+
 state = AppState()

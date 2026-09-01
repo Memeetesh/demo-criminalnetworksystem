@@ -1,0 +1,68 @@
+{
+  "reports": [
+    {
+      "report_id": "CR-2024-001",
+      "date": "2024-03-15",
+      "type": "Drug Trafficking",
+      "location": "Mumbai, Maharashtra",
+      "description": "Intelligence reports indicate that Rajesh Kumar and Vikram Singh have been coordinating drug shipments through the Mumbai port. The consignments are believed to originate from Afghanistan and are routed via Dubai. Rajesh Kumar was seen meeting with Deepak Sharma at the Taj Mahal Hotel in Colaba on March 12. Vikram Singh is suspected to operate from a warehouse in Navi Mumbai owned by Sunrise Logistics Pvt Ltd.",
+      "suspects": ["Rajesh Kumar", "Vikram Singh", "Deepak Sharma"]
+    },
+    {
+      "report_id": "CR-2024-002",
+      "date": "2024-03-18",
+      "type": "Money Laundering",
+      "location": "New Delhi",
+      "description": "Deepak Sharma has been traced to multiple shell companies registered in New Delhi. Financial investigation reveals that Rs 5,00,00,000 was transferred from Golden Star Enterprises to Horizon Capital Partners between January and March 2024. Priya Verma, a chartered accountant based in Gurgaon, is suspected of facilitating the transactions. Deepak Sharma was also in contact with Mohammed Ali from Kolkata regarding hawala transfers.",
+      "suspects": ["Deepak Sharma", "Priya Verma", "Mohammed Ali"]
+    },
+    {
+      "report_id": "CR-2024-003",
+      "date": "2024-03-22",
+      "type": "Arms Dealing",
+      "location": "Lucknow, Uttar Pradesh",
+      "description": "Police intercepted a vehicle bearing registration plate UP32 AB 1234 near Lucknow carrying illegal firearms. The driver, Sunil Yadav, confessed to receiving instructions from Vikram Singh. Phone records show frequent calls between Sunil Yadav at 9876543210 and Vikram Singh at 9988776655. The weapons were traced to a supplier in Munger, Bihar known as Ravi Mishra. Sunil Yadav also mentioned deliveries to a contact named Anil Gupta in Kanpur.",
+      "suspects": ["Sunil Yadav", "Vikram Singh", "Ravi Mishra", "Anil Gupta"]
+    },
+    {
+      "report_id": "CR-2024-004",
+      "date": "2024-04-02",
+      "type": "Extortion",
+      "location": "Pune, Maharashtra",
+      "description": "Local businessman Amit Patel filed a complaint alleging extortion by members of the Rajesh Kumar gang. Amit Patel received threatening calls from phone number 8877665544 demanding Rs 50,00,000 as protection money. The caller identified himself as working for Rajesh Kumar. Surveillance footage shows Deepak Sharma visiting Amit Patel's factory in Pimpri-Chinchwad. A vehicle with registration MH12 CD 5678 was observed near the factory.",
+      "suspects": ["Rajesh Kumar", "Deepak Sharma"]
+    },
+    {
+      "report_id": "CR-2024-005",
+      "date": "2024-04-10",
+      "type": "Cyber Crime",
+      "location": "Bangalore, Karnataka",
+      "description": "The Cyber Crime Cell traced suspicious financial transactions to email addresses darkweb_dealer@proton.me and v.singh_ops@tutanota.com. Priya Verma's email priya.verma@gmail.com was found in correspondence related to cryptocurrency wallets used for laundering proceeds. The investigation revealed connections to a technology company called ByteForce Solutions based in Bangalore. Mohammed Ali was identified as the person operating the darkweb marketplace from a rented apartment in Electronic City, Bangalore.",
+      "suspects": ["Priya Verma", "Mohammed Ali", "Vikram Singh"]
+    },
+    {
+      "report_id": "CR-2024-006",
+      "date": "2024-04-18",
+      "type": "Human Trafficking",
+      "location": "Chennai, Tamil Nadu",
+      "description": "Intelligence from Interpol suggests that Rajesh Kumar's network extends to human trafficking operations in Chennai. A contact named Selvam Rajan coordinates recruitment of victims from rural Tamil Nadu. Selvam Rajan operates through a front company called Southern Welfare Trust registered in Chennai. He was seen meeting Anil Gupta at Chennai Central railway station. Phone intercepts captured calls between Selvam Rajan at 7766554433 and Rajesh Kumar.",
+      "suspects": ["Rajesh Kumar", "Selvam Rajan", "Anil Gupta"]
+    },
+    {
+      "report_id": "CR-2024-007",
+      "date": "2024-05-01",
+      "type": "Surveillance Report",
+      "location": "Hyderabad, Telangana",
+      "description": "Surveillance team observed Ravi Mishra meeting with a new contact identified as Farhan Khan at a hotel in Banjara Hills, Hyderabad. Farhan Khan is a known associate of several organized crime syndicates operating across Telangana and Andhra Pradesh. A vehicle registered as TS09 EF 9012 was used by Farhan Khan. Both individuals were seen exchanging packages. Farhan Khan runs a business called Atlas Import Export based in Secunderabad.",
+      "suspects": ["Ravi Mishra", "Farhan Khan"]
+    },
+    {
+      "report_id": "CR-2024-008",
+      "date": "2024-05-12",
+      "type": "Financial Investigation",
+      "location": "Kolkata, West Bengal",
+      "description": "Investigation into Mohammed Ali's financial records reveals accounts at multiple banks in Kolkata. Rs 2,50,00,000 was routed through Park Street branch of State Bank of India. Mohammed Ali owns a registered business called Eastern Trading Company in Salt Lake City, Kolkata. Records show wire transfers to Dubai and Singapore. He was contacted by Priya Verma through email m.ali_trade@outlook.com regarding investment opportunities in real estate in Rajarhat.",
+      "suspects": ["Mohammed Ali", "Priya Verma"]
+    }
+  ]
+}

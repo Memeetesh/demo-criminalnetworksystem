@@ -1,95 +1,110 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import cytoscape from 'cytoscape';
 import coseBilkent from 'cytoscape-cose-bilkent';
-import { ZoomIn, ZoomOut, Maximize2, RefreshCw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize2, RefreshCw, Share2 } from 'lucide-react';
 
 cytoscape.use(coseBilkent);
 
 const ENTITY_COLORS = {
   PERSON: '#ff6b9d',
+  PER: '#ff6b9d',
   LOCATION: '#00e676',
+  LOC: '#00e676',
   ORGANIZATION: '#7c4dff',
+  ORG: '#7c4dff',
   VEHICLE: '#448aff',
   PHONE: '#ff9100',
-  EMAIL: '#e040fb'
+  EMAIL: '#e040fb',
+  MISC: '#8892a4'
 };
 
 const ENTITY_SHAPES = {
   PERSON: 'ellipse',
+  PER: 'ellipse',
   LOCATION: 'round-rectangle',
+  LOC: 'round-rectangle',
   ORGANIZATION: 'hexagon',
+  ORG: 'hexagon',
   VEHICLE: 'diamond',
   PHONE: 'rectangle',
-  EMAIL: 'triangle'
+  EMAIL: 'triangle',
+  MISC: 'ellipse'
 };
 
-const COMMUNITY_COLORS = [
-  '#f44336', '#e91e63', '#9c27b0', '#673ab7', 
-  '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50'
-];
-
-export default function GraphCanvas({ 
+const GraphCanvas = ({ 
   graphData, 
   filters, 
   layoutName, 
-  onNodeSelect, 
-  searchQuery,
-  highlightedPath
-}) {
+  searchQuery, 
+  highlightedPath, 
+  onNodeSelect 
+}) => {
   const containerRef = useRef(null);
   const cyRef = useRef(null);
+  const [isEmpty, setIsEmpty] = useState(true);
 
-  // Initialize Cytoscape instance
+  // Initialize Cytoscape
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const cy = cytoscape({
+    cyRef.current = cytoscape({
       container: containerRef.current,
       style: [
         {
           selector: 'node',
           style: {
             'label': 'data(label)',
-            'color': '#ffffff',
-            'text-outline-color': '#070913',
+            'color': '#fff',
+            'text-outline-color': '#111928',
             'text-outline-width': 2,
-            'font-size': '11px',
-            'font-weight': 600,
-            'background-color': (ele) => ENTITY_COLORS[ele.data('type')] || '#8892a4',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'font-size': '10px',
             'shape': (ele) => ENTITY_SHAPES[ele.data('type')] || 'ellipse',
-            'width': (ele) => Math.max(34, Math.min(85, (ele.data('betweenness_centrality') || 0.1) * 220 + 30)),
-            'height': (ele) => Math.max(34, Math.min(85, (ele.data('betweenness_centrality') || 0.1) * 220 + 30)),
-            'border-width': 2.5,
+            'background-color': (ele) => ENTITY_COLORS[ele.data('type')] || '#8892a4',
+            'width': (ele) => {
+              const bc = ele.data('betweenness_centrality') || 0;
+              return Math.max(34, Math.min(85, 34 + bc * 100));
+            },
+            'height': (ele) => {
+              const bc = ele.data('betweenness_centrality') || 0;
+              return Math.max(34, Math.min(85, 34 + bc * 100));
+            },
+            'border-width': 2,
             'border-color': (ele) => {
               const comm = ele.data('community');
-              return comm != null && comm >= 0 ? COMMUNITY_COLORS[comm % COMMUNITY_COLORS.length] : 'rgba(255,255,255,0.2)';
+              return comm !== undefined ? `hsl(${(comm * 137.5) % 360}, 70%, 50%)` : '#374151';
             },
-            'transition-property': 'background-color, border-color, width, height',
-            'transition-duration': '0.3s'
+            'transition-property': 'opacity, border-color, box-shadow',
+            'transition-duration': 200
           }
         },
         {
           selector: 'edge',
           style: {
-            'width': (ele) => Math.max(1.5, Math.min(6, ele.data('weight') || 1)),
-            'line-color': 'rgba(68, 138, 255, 0.4)',
+            'width': (ele) => Math.max(1, (ele.data('weight') || 1) * 1.5),
+            'line-color': 'rgba(107, 114, 128, 0.5)',
             'curve-style': 'bezier',
             'label': 'data(label)',
-            'font-size': '9px',
-            'color': '#8492a6',
-            'text-outline-color': '#070913',
-            'text-outline-width': 1.5,
-            'opacity': 0.75
+            'font-size': '8px',
+            'color': '#9ca3af',
+            'text-outline-color': '#111928',
+            'text-outline-width': 1,
+            'text-opacity': 0,
+            'target-arrow-shape': 'triangle',
+            'target-arrow-color': 'rgba(107, 114, 128, 0.5)',
+            'transition-property': 'opacity, line-color, target-arrow-color',
+            'transition-duration': 200
           }
         },
         {
           selector: 'node:selected',
           style: {
-            'border-color': '#00f0ff',
+            'border-color': '#00e5ff',
             'border-width': 4,
             'shadow-blur': 15,
-            'shadow-color': '#00f0ff',
-            'shadow-opacity': 0.9
+            'shadow-color': '#00e5ff',
+            'shadow-opacity': 0.8
           }
         },
         {
@@ -101,198 +116,227 @@ export default function GraphCanvas({
         {
           selector: '.highlighted',
           style: {
-            'border-color': '#ffb703',
-            'border-width': 4,
-            'line-color': '#ffb703',
-            'opacity': 1,
-            'shadow-blur': 12,
-            'shadow-color': '#ffb703'
+            'border-color': '#ffc107',
+            'border-width': 3,
+            'shadow-blur': 10,
+            'shadow-color': '#ffc107',
+            'shadow-opacity': 0.8,
+            'z-index': 10
+          }
+        },
+        {
+          selector: 'edge.highlighted',
+          style: {
+            'line-color': '#ffc107',
+            'target-arrow-color': '#ffc107',
+            'text-opacity': 1,
+            'width': 3,
+            'z-index': 10
           }
         }
       ],
-      layout: { name: 'preset' }
+      wheelSensitivity: 0.2,
+      minZoom: 0.1,
+      maxZoom: 5
     });
 
-    // Node click handler
-    cy.on('tap', 'node', (evt) => {
+    // Interaction events
+    cyRef.current.on('tap', 'node', (evt) => {
       const node = evt.target;
-      onNodeSelect(node.data());
+      
+      // Notify parent
+      if (onNodeSelect) {
+        onNodeSelect(node.data());
+      }
 
-      // Highlight 1-hop neighborhood
-      cy.elements().addClass('dimmed').removeClass('highlighted');
-      node.removeClass('dimmed').addClass('highlighted');
-      node.neighborhood().removeClass('dimmed').addClass('highlighted');
+      // Highlight ego network
+      cyRef.current.elements().addClass('dimmed').removeClass('highlighted');
+      const neighborhood = node.neighborhood().add(node);
+      neighborhood.removeClass('dimmed').addClass('highlighted');
     });
 
-    // Background tap resets selection
-    cy.on('tap', (evt) => {
-      if (evt.target === cy) {
-        cy.elements().removeClass('dimmed').removeClass('highlighted');
-        onNodeSelect(null);
+    cyRef.current.on('tap', (evt) => {
+      if (evt.target === cyRef.current) {
+        // Clicked on background
+        cyRef.current.elements().removeClass('dimmed').removeClass('highlighted');
+        if (onNodeSelect) {
+          onNodeSelect(null);
+        }
       }
     });
-
-    cyRef.current = cy;
 
     return () => {
       if (cyRef.current) {
         cyRef.current.destroy();
+        cyRef.current = null;
       }
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Update elements when graphData changes
+  // Load data
   useEffect(() => {
-    const cy = cyRef.current;
-    if (!cy || !graphData) return;
+    if (!cyRef.current || !graphData) return;
 
-    cy.elements().remove();
+    let elements = [];
+    const rawNodes = graphData.nodes || (graphData.data && graphData.data.nodes) || [];
+    const rawEdges = graphData.edges || (graphData.data && graphData.data.edges) || [];
+    
+    // Detect if nodes are already in Cytoscape format {data: {...}} or flat {id: ...}
+    const nodes = rawNodes.map(n => n.data ? n : { data: n });
+    const edges = rawEdges.map(e => e.data ? e : { data: e });
+    elements = [...nodes, ...edges];
 
-    const nodes = (graphData.nodes || []).map(n => ({ data: n.data || n }));
-    const edges = (graphData.edges || []).map(e => ({ data: e.data || e }));
+    if (elements.length > 0) {
+      cyRef.current.elements().remove();
+      cyRef.current.add(elements);
+      setIsEmpty(false);
+      runLayout(layoutName || 'cose-bilkent');
+    } else {
+      setIsEmpty(true);
+    }
+  }, [graphData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    if (nodes.length > 0) {
-      cy.add([...nodes, ...edges]);
+  // Handle layout changes
+  useEffect(() => {
+    if (cyRef.current && !isEmpty) {
       runLayout(layoutName);
     }
-  }, [graphData]);
+  }, [layoutName, isEmpty]);
 
-  // Apply filters
+  // Handle filters
   useEffect(() => {
-    const cy = cyRef.current;
-    if (!cy) return;
+    if (!cyRef.current || isEmpty) return;
 
-    cy.nodes().forEach((node) => {
-      const type = node.data('type');
-      if (filters[type] !== false) {
-        node.style('display', 'element');
-      } else {
-        node.style('display', 'none');
-      }
+    cyRef.current.batch(() => {
+      cyRef.current.nodes().forEach(node => {
+        const type = node.data('type') || 'MISC';
+        const typeKey = Object.keys(ENTITY_COLORS).find(k => k === type || k.startsWith(type) || type.startsWith(k));
+        
+        // If filter is explicitly false for this type, hide it
+        if (filters && typeKey && filters[typeKey] === false) {
+          node.style('display', 'none');
+        } else {
+          node.style('display', 'element');
+        }
+      });
     });
-  }, [filters]);
+  }, [filters, isEmpty]);
 
-  // Apply layout changes
+  // Handle Search Query
   useEffect(() => {
-    runLayout(layoutName);
-  }, [layoutName]);
+    if (!cyRef.current || isEmpty) return;
 
-  // Apply search query highlighting
-  useEffect(() => {
-    const cy = cyRef.current;
-    if (!cy) return;
-
-    if (!searchQuery || searchQuery.trim() === '') {
-      cy.elements().removeClass('dimmed').removeClass('highlighted');
+    if (!searchQuery) {
+      cyRef.current.elements().removeClass('dimmed').removeClass('highlighted');
       return;
     }
 
-    const q = searchQuery.toLowerCase().trim();
-    cy.elements().addClass('dimmed').removeClass('highlighted');
+    const query = searchQuery.toLowerCase();
+    cyRef.current.batch(() => {
+      cyRef.current.elements().addClass('dimmed').removeClass('highlighted');
+      
+      const matchingNodes = cyRef.current.nodes().filter(node => {
+        const label = (node.data('label') || '').toLowerCase();
+        const type = (node.data('type') || '').toLowerCase();
+        const id = (node.data('id') || '').toLowerCase();
+        return label.includes(query) || type.includes(query) || id.includes(query);
+      });
 
-    const matchedNodes = cy.nodes().filter(node => {
-      const label = (node.data('label') || '').toLowerCase();
-      const id = (node.data('id') || '').toLowerCase();
-      return label.includes(q) || id.includes(q);
+      matchingNodes.removeClass('dimmed').addClass('highlighted');
     });
+  }, [searchQuery, isEmpty]);
 
-    matchedNodes.removeClass('dimmed').addClass('highlighted');
-    matchedNodes.neighborhood().removeClass('dimmed');
-  }, [searchQuery]);
-
-  // Highlight specific path
+  // Handle Highlighted Path (Pathfinder)
   useEffect(() => {
-    const cy = cyRef.current;
-    if (!cy || !highlightedPath || highlightedPath.length === 0) return;
+    if (!cyRef.current || isEmpty) return;
 
-    cy.elements().addClass('dimmed').removeClass('highlighted');
-    highlightedPath.forEach(id => {
-      const node = cy.getElementById(id);
-      if (node) node.removeClass('dimmed').addClass('highlighted');
+    if (!highlightedPath || highlightedPath.length === 0) {
+      // Don't reset if we are currently searching
+      if (!searchQuery) {
+         cyRef.current.elements().removeClass('dimmed').removeClass('highlighted');
+      }
+      return;
+    }
+
+    cyRef.current.batch(() => {
+      cyRef.current.elements().addClass('dimmed').removeClass('highlighted');
+      
+      // Path is array of node IDs
+      for (let i = 0; i < highlightedPath.length; i++) {
+        const nodeId = highlightedPath[i];
+        cyRef.current.getElementById(nodeId).removeClass('dimmed').addClass('highlighted');
+        
+        if (i < highlightedPath.length - 1) {
+          const nextId = highlightedPath[i + 1];
+          // Highlight edge between them
+          const edges = cyRef.current.edges(`[source = "${nodeId}"][target = "${nextId}"], [source = "${nextId}"][target = "${nodeId}"]`);
+          edges.removeClass('dimmed').addClass('highlighted');
+        }
+      }
     });
-  }, [highlightedPath]);
+  }, [highlightedPath, isEmpty]);
 
-  const runLayout = (name) => {
-    const cy = cyRef.current;
-    if (!cy) return;
-
-    let options = { name: name || 'cose-bilkent', animate: true, animationDuration: 500 };
-    if (name === 'cose-bilkent') {
-      options = {
-        ...options,
-        idealEdgeLength: 90,
-        nodeRepulsion: 6500,
-        nodeDimensionsIncludeLabels: true
-      };
+  function runLayout(layout) {
+    if (!cyRef.current) return;
+    
+    let options = { name: layout, animate: true, animationDuration: 500 };
+    
+    if (layout === 'cose-bilkent' || layout === 'coseBilkent') {
+      options.name = 'cose-bilkent';
+      options.nodeRepulsion = 4500;
+      options.idealEdgeLength = 100;
     }
-    cy.layout(options).run();
-  };
 
-  const handleZoomIn = () => cyRef.current?.zoom(cyRef.current.zoom() * 1.25);
-  const handleZoomOut = () => cyRef.current?.zoom(cyRef.current.zoom() * 0.8);
-  const handleFit = () => cyRef.current?.fit();
-  const handleReset = () => {
-    if (cyRef.current) {
-      cyRef.current.elements().removeClass('dimmed').removeClass('highlighted');
-      runLayout(layoutName);
-    }
-  };
+    const layoutInstance = cyRef.current.layout(options);
+    layoutInstance.run();
+  }
+
+  const handleZoomIn = () => cyRef.current && cyRef.current.zoom(cyRef.current.zoom() * 1.2);
+  const handleZoomOut = () => cyRef.current && cyRef.current.zoom(cyRef.current.zoom() * 0.8);
+  const handleFit = () => cyRef.current && cyRef.current.fit(cyRef.current.elements(':visible'), 50);
+  const handleRefresh = () => runLayout(layoutName || 'cose-bilkent');
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-      {/* Cytoscape DOM container */}
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-
-      {/* Floating Canvas Controls */}
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        right: '20px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-        background: 'rgba(15, 20, 35, 0.85)',
-        backdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        padding: '6px',
-        borderRadius: '10px',
-        zIndex: 50
-      }}>
-        <button onClick={handleZoomIn} title="Zoom In" className="btn-action"><ZoomIn size={14} /></button>
-        <button onClick={handleZoomOut} title="Zoom Out" className="btn-action"><ZoomOut size={14} /></button>
-        <button onClick={handleFit} title="Fit View" className="btn-action"><Maximize2 size={14} /></button>
-        <button onClick={handleReset} title="Reset Layout" className="btn-action"><RefreshCw size={14} /></button>
-      </div>
-
-      {/* Empty State Overlay */}
-      {(!graphData || !graphData.nodes || graphData.nodes.length === 0) && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          textAlign: 'center',
-          pointerEvents: 'none',
-          color: '#8492a6'
+    <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: '500px', backgroundColor: '#0b1120' }}>
+      <div 
+        ref={containerRef} 
+        style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+      />
+      
+      {isEmpty && (
+        <div style={{ 
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', 
+          alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(11, 17, 32, 0.8)',
+          color: '#8892a4', pointerEvents: 'none'
         }}>
-          <div style={{
-            width: '64px',
-            height: '64px',
-            margin: '0 auto 16px',
-            borderRadius: '50%',
-            background: 'rgba(0, 240, 255, 0.05)',
-            border: '1px dashed rgba(0, 240, 255, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#00f0ff'
-          }}>
-            <RefreshCw className="animate-spin" size={24} />
-          </div>
-          <h3 style={{ color: '#fff', fontSize: '16px', marginBottom: '4px' }}>No Graph Loaded</h3>
-          <p style={{ fontSize: '13px' }}>Upload a CSV, JSON, or PDF crime report to generate intelligence network.</p>
+          <Share2 size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#e5e7eb' }}>No Network Data</h2>
+          <p>Ingest data to visualize the criminal network.</p>
+        </div>
+      )}
+
+      {!isEmpty && (
+        <div className="glass-panel" style={{ 
+          position: 'absolute', bottom: '20px', right: '20px', 
+          display: 'flex', flexDirection: 'column', gap: '0.5rem',
+          padding: '0.5rem', borderRadius: '8px'
+        }}>
+          <button className="btn-action" onClick={handleZoomIn} title="Zoom In">
+            <ZoomIn size={20} />
+          </button>
+          <button className="btn-action" onClick={handleZoomOut} title="Zoom Out">
+            <ZoomOut size={20} />
+          </button>
+          <button className="btn-action" onClick={handleFit} title="Fit to Screen">
+            <Maximize2 size={20} />
+          </button>
+          <button className="btn-action" onClick={handleRefresh} title="Recalculate Layout">
+            <RefreshCw size={20} />
+          </button>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default GraphCanvas;

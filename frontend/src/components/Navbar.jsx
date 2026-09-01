@@ -1,132 +1,189 @@
-import React from 'react';
-import { Shield, Activity, Upload, Search, Network, Users, AlertTriangle, Cpu } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, 
+  Search, 
+  Share2, 
+  FileText, 
+  AlertTriangle, 
+  Database,
+  Menu,
+  X
+} from 'lucide-react';
 
-export default function Navbar({ 
+const Navbar = ({ 
   activeTab, 
   setActiveTab, 
   statusText, 
   statusType, 
-  onUploadClick,
-  searchQuery,
-  setSearchQuery
-}) {
+  onUploadClick, 
+  searchQuery, 
+  setSearchQuery 
+}) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const getStatusColor = () => {
-    if (statusType === 'error') return '#ff3366';
-    if (statusType === 'success') return '#00ff88';
-    return '#00f0ff';
+    switch(statusType) {
+      case 'success': return '#00e676';
+      case 'error': return '#ff1744';
+      case 'warning': return '#ff9100';
+      case 'processing': return '#2979ff';
+      default: return '#78909c';
+    }
   };
 
   return (
-    <header style={{
-      height: '60px',
-      background: 'rgba(10, 13, 26, 0.95)',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 20px',
-      zIndex: 100
-    }}>
-      {/* Brand Title */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(124, 77, 255, 0.3))',
-          border: '1px solid rgba(0, 240, 255, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#00f0ff'
-        }}>
-          <Shield size={20} />
-        </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h1 style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.5px', color: '#fff' }}>
+    <nav className="navbar glass-panel">
+      <div className="navbar-top-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
+        
+        {/* Brand Section */}
+        <div className="brand-section" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="logo-icon" style={{ color: '#00e676' }}>
+            <Shield size={28} />
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, letterSpacing: '1px' }}>
               CRIMINAL NETWORK INTELLIGENCE
             </h1>
-            <span style={{
-              background: 'rgba(255, 51, 102, 0.15)',
-              color: '#ff3366',
-              border: '1px solid rgba(255, 51, 102, 0.3)',
-              fontSize: '9px',
-              fontWeight: 800,
-              padding: '2px 6px',
-              borderRadius: '4px'
-            }}>
+            <span className="badge-tag badge-alert" style={{ fontSize: '0.65rem', backgroundColor: 'rgba(255, 23, 68, 0.15)', color: '#ff1744', padding: '2px 6px', borderRadius: '4px', border: '1px solid #ff1744' }}>
               CIB CLASSIFIED
             </span>
           </div>
-          <span style={{ fontSize: '11px', color: '#8492a6' }}>AI Analytics Engine & Entity Mapper</span>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '6px' }}>
-        <button
-          onClick={() => setActiveTab('graph')}
-          className={`btn-action ${activeTab === 'graph' ? 'active' : ''}`}
-        >
-          <Network size={14} /> Network Graph
-        </button>
-        <button
-          onClick={() => setActiveTab('entities')}
-          className={`btn-action ${activeTab === 'entities' ? 'active' : ''}`}
-        >
-          <Users size={14} /> Extracted Entities
-        </button>
-        <button
-          onClick={() => setActiveTab('alerts')}
-          className={`btn-action ${activeTab === 'alerts' ? 'active' : ''}`}
-        >
-          <AlertTriangle size={14} /> Suspicious Alerts
-        </button>
-      </div>
-
-      {/* Search & Actions */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {/* Search Bar */}
-        <div style={{ position: 'relative', width: '220px' }}>
-          <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#8492a6' }} />
-          <input
-            type="text"
-            placeholder="Search entities..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '6px 12px 6px 32px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '6px',
-              color: '#fff',
-              fontSize: '12px',
-              outline: 'none'
-            }}
-          />
         </div>
 
-        {/* Upload Trigger Button */}
-        <button onClick={onUploadClick} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Upload size={14} /> Ingest Data
-        </button>
+        {/* Mobile Menu Toggle */}
+        {isMobile && (
+          <button 
+            className="btn-action"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            style={{ padding: '0.5rem' }}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
 
-        {/* Live Status Indicator */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 12px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '20px',
-          border: '1px solid rgba(255, 255, 255, 0.06)'
+        {/* Desktop / Expanded Mobile Actions */}
+        <div className="navbar-actions" style={{ 
+          display: isMobile && !isMobileMenuOpen ? 'none' : 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: '1rem',
+          flex: isMobile ? '1 1 100%' : 'auto'
         }}>
-          <div className="pulse-dot" style={{ backgroundColor: getStatusColor(), color: getStatusColor() }} />
-          <span style={{ fontSize: '11px', color: '#cbd5e1', fontFamily: 'var(--font-mono)' }}>{statusText}</span>
+          
+          {/* Search Bar (Hidden on Mobile) */}
+          {!isMobile && (
+            <div className="search-bar" style={{ position: 'relative', minWidth: '250px' }}>
+              <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#8892a4' }} />
+              <input 
+                type="text" 
+                placeholder="Search entities, phones, addresses..." 
+                value={searchQuery || ''}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ 
+                  width: '100%', 
+                  padding: '0.5rem 1rem 0.5rem 2.2rem', 
+                  borderRadius: '6px', 
+                  border: '1px solid rgba(255,255,255,0.1)', 
+                  backgroundColor: 'rgba(0,0,0,0.2)',
+                  color: '#fff',
+                  outline: 'none'
+                }}
+              />
+            </div>
+          )}
+
+          {/* Status Indicator */}
+          <div className="status-indicator" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.25rem 0.75rem', borderRadius: '20px', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+            <div 
+              className="pulse-dot" 
+              style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                backgroundColor: getStatusColor(),
+                boxShadow: `0 0 8px ${getStatusColor()}`
+              }}
+            />
+            <span style={{ fontSize: '0.8rem', color: '#b0bec5' }}>
+              {statusText || 'System Ready'}
+            </span>
+          </div>
+
+          {/* Ingest Data Button */}
+          <button className="btn-primary" onClick={onUploadClick} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+            <Database size={16} />
+            Ingest Data
+          </button>
         </div>
       </div>
-    </header>
+
+      {/* Tabs Row */}
+      <div className="navbar-tabs" style={{ 
+        display: isMobile && !isMobileMenuOpen ? 'none' : 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        marginTop: '1rem', 
+        borderTop: '1px solid rgba(255,255,255,0.05)', 
+        paddingTop: '0.5rem',
+        gap: '0.5rem'
+      }}>
+        <button 
+          className={`tab-btn ${activeTab === 'graph' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('graph')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+            background: activeTab === 'graph' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: 'none', borderRadius: '4px', color: activeTab === 'graph' ? '#fff' : '#8892a4',
+            cursor: 'pointer', transition: 'all 0.2s', justifyContent: isMobile ? 'flex-start' : 'center'
+          }}
+        >
+          <Share2 size={16} />
+          Network Graph
+        </button>
+        
+        <button 
+          className={`tab-btn ${activeTab === 'entities' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('entities')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+            background: activeTab === 'entities' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: 'none', borderRadius: '4px', color: activeTab === 'entities' ? '#fff' : '#8892a4',
+            cursor: 'pointer', transition: 'all 0.2s', justifyContent: isMobile ? 'flex-start' : 'center'
+          }}
+        >
+          <FileText size={16} />
+          Extracted Entities
+        </button>
+        
+        <button 
+          className={`tab-btn ${activeTab === 'alerts' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('alerts')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+            background: activeTab === 'alerts' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: 'none', borderRadius: '4px', color: activeTab === 'alerts' ? '#fff' : '#8892a4',
+            cursor: 'pointer', transition: 'all 0.2s', justifyContent: isMobile ? 'flex-start' : 'center'
+          }}
+        >
+          <AlertTriangle size={16} />
+          Suspicious Alerts
+        </button>
+      </div>
+    </nav>
   );
-}
+};
+
+export default Navbar;

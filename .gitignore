@@ -1,0 +1,25 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Flask / Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Node / React
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.DS_Store
+
+# IDE & OS
+demo-criminalnetworksystem/
+.vscode/
+.idea/
+*.swp
+*.tmp
