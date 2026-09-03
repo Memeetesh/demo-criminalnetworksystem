@@ -111,6 +111,20 @@ def process_file(filepath: str, filename: str) -> dict:
 
     for doc in texts:
         patterns = pattern_ext.extract_all(doc['text'])
+        doc_id = doc['doc_id']
+
+        # Tag each pattern with its source document
+        for phone in patterns.get('phones', []):
+            phone['doc_id'] = doc_id
+        for vehicle in patterns.get('vehicles', []):
+            vehicle['doc_id'] = doc_id
+        for email in patterns.get('emails', []):
+            email['doc_id'] = doc_id
+        for money in patterns.get('money', []):
+            money['doc_id'] = doc_id
+        for date in patterns.get('dates', []):
+            date['doc_id'] = doc_id
+
         all_phones.extend(patterns.get('phones', []))
         all_vehicles.extend(patterns.get('vehicles', []))
         all_emails.extend(patterns.get('emails', []))
@@ -118,7 +132,6 @@ def process_file(filepath: str, filename: str) -> dict:
         all_dates.extend(patterns.get('dates', []))
 
         # Add pattern entities to the entity set for this document
-        doc_id = doc['doc_id']
         matching_set = next((es for es in entity_sets if es['doc_id'] == doc_id), None)
         if matching_set:
             for phone in patterns.get('phones', []):
@@ -211,6 +224,8 @@ def process_file(filepath: str, filename: str) -> dict:
         'phones_found': len(all_phones),
         'vehicles_found': len(all_vehicles),
         'emails_found': len(all_emails),
+        'money_found': len(all_money),
+        'dates_found': len(all_dates),
         'graph_nodes': graph.number_of_nodes() if graph else 0,
         'graph_edges': graph.number_of_edges() if graph else 0,
         'communities_detected': len(state.analysis_results.get('communities', []))

@@ -7,6 +7,8 @@ class AppState:
         self.analysis_results = {}  # cached analysis
         self.temporal_data = []  # temporal records
         self.pattern_results = {'phones': [], 'vehicles': [], 'emails': [], 'money': [], 'dates': []}
+        self.cdr_records = []
+        self.cdr_analysis = {}
 
     def reset(self):
         """Reset all state for a fresh analysis."""
@@ -16,5 +18,7 @@ class AppState:
         self.analysis_results = {}
         self.temporal_data = []
         self.pattern_results = {'phones': [], 'vehicles': [], 'emails': [], 'money': [], 'dates': []}
+        self.cdr_records = []
+        self.cdr_analysis = {}
 
 state = AppState()

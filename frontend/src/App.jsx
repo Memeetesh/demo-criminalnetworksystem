@@ -7,6 +7,8 @@ import RightSidebar from './components/RightSidebar';
 import GraphCanvas from './components/GraphCanvas';
 import ExtractedEntitiesView from './components/ExtractedEntitiesView';
 import SuspiciousPatternsView from './components/SuspiciousPatternsView';
+import PatternResultsView from './components/PatternResultsView';
+import CDRAnalysisView from './components/CDRAnalysisView';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('graph');
@@ -20,6 +22,8 @@ export default function App() {
   const [keyPlayers, setKeyPlayers] = useState([]);
   const [communities, setCommunities] = useState([]);
   const [suspiciousAlerts, setSuspiciousAlerts] = useState([]);
+  const [patternResults, setPatternResults] = useState({ phones: [], vehicles: [], emails: [], money: [], dates: [], counts: { phones: 0, vehicles: 0, emails: 0, money: 0, dates: 0 } });
+  const [cdrData, setCdrData] = useState({ summary: { total_records: 0 }, timeline: { contacts: [], events: [], total_events: 0 }, chord: { contacts: [], links: [], max_weight: 1 } });
 
   // Interaction
   const [selectedNode, setSelectedNode] = useState(null);
@@ -47,7 +51,7 @@ export default function App() {
     setStatusText('Fetching intelligence data...');
     setStatusType('info');
     try {
-      const [graphRes, statsRes, centralityRes, commRes, suspiciousRes, entitiesRes] =
+      const [graphRes, statsRes, centralityRes, commRes, suspiciousRes, entitiesRes, patternsRes] =
         await Promise.all([
           fetch('/api/network/graph').catch(() => ({ ok: false })),
           fetch('/api/analysis/summary').catch(() => ({ ok: false })),
@@ -55,6 +59,7 @@ export default function App() {
           fetch('/api/analysis/communities').catch(() => ({ ok: false })),
           fetch('/api/patterns/suspicious').catch(() => ({ ok: false })),
           fetch('/api/entities?limit=200').catch(() => ({ ok: false })),
+          fetch('/api/patterns/all').catch(() => ({ ok: false })),
         ]);
 
       if (graphRes.ok) setGraphData(await graphRes.json());
@@ -62,6 +67,22 @@ export default function App() {
       if (centralityRes.ok) setKeyPlayers(await centralityRes.json());
       if (commRes.ok) setCommunities(await commRes.json());
       if (suspiciousRes.ok) setSuspiciousAlerts(await suspiciousRes.json());
+      if (patternsRes.ok) setPatternResults(await patternsRes.json());
+      
+      // Fetch CDR data if available
+      try {
+        const [cdrSummaryRes, cdrTimelineRes, cdrChordRes] = await Promise.all([
+          fetch('/api/cdr/summary').catch(() => ({ ok: false })),
+          fetch('/api/cdr/timeline').catch(() => ({ ok: false })),
+          fetch('/api/cdr/chord').catch(() => ({ ok: false })),
+        ]);
+        const newCdrData = { ...cdrData };
+        if (cdrSummaryRes.ok) newCdrData.summary = await cdrSummaryRes.json();
+        if (cdrTimelineRes.ok) newCdrData.timeline = await cdrTimelineRes.json();
+        if (cdrChordRes.ok) newCdrData.chord = await cdrChordRes.json();
+        setCdrData(newCdrData);
+      } catch (e) { console.error('CDR fetch error:', e); }
+
       if (entitiesRes.ok) {
         const entData = await entitiesRes.json();
         // API returns { entities: [...] } — store as map for dossier, keep array for sidebar
@@ -110,6 +131,29 @@ export default function App() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleCDRUpload = async (file) => {
+    setStatusText(`Processing CDR: ${file.name}...`);
+    setStatusType('info');
+    showToast(`Analyzing call records from ${file.name}...`, 'info');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/cdr/upload', { method: 'POST', body: formData });
+      if (!res.ok) throw new Error('CDR upload failed');
+      const result = await res.json();
+      const count = result.summary?.total_records || 0;
+      setStatusText(`CDR: ${count} records analyzed`);
+      setStatusType('success');
+      showToast(`Success! ${count} call records analyzed`, 'success');
+      setTimeout(() => fetchAllData(), 500);
+    } catch (err) {
+      console.error('CDR upload error:', err);
+      setStatusText('CDR Upload Failed');
+      setStatusType('error');
+      showToast('CDR upload failed. Check file format.', 'error');
     }
   };
 
@@ -217,6 +261,14 @@ export default function App() {
                 setActiveTab('graph');
               }}
             />
+          )}
+
+          {activeTab === 'patterns' && (
+            <PatternResultsView patternResults={patternResults} />
+          )}
+
+          {activeTab === 'cdr' && (
+            <CDRAnalysisView cdrData={cdrData} onCDRUpload={handleCDRUpload} />
           )}
         </div>
 

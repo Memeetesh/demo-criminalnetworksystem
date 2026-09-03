@@ -7,7 +7,9 @@ import {
   AlertTriangle, 
   Database,
   Menu,
-  X
+  X,
+  ScanSearch,
+  PhoneCall
 } from 'lucide-react';
 
 const Navbar = ({ 
@@ -169,6 +171,20 @@ const Navbar = ({
         </button>
         
         <button 
+          className={`tab-btn ${activeTab === 'patterns' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('patterns')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+            background: activeTab === 'patterns' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: 'none', borderRadius: '4px', color: activeTab === 'patterns' ? '#fff' : '#8892a4',
+            cursor: 'pointer', transition: 'all 0.2s', justifyContent: isMobile ? 'flex-start' : 'center'
+          }}
+        >
+          <ScanSearch size={16} />
+          Pattern Results
+        </button>
+        
+        <button 
           className={`tab-btn ${activeTab === 'alerts' ? 'active' : ''}`} 
           onClick={() => setActiveTab('alerts')}
           style={{
@@ -180,6 +196,20 @@ const Navbar = ({
         >
           <AlertTriangle size={16} />
           Suspicious Alerts
+        </button>
+
+        <button 
+          className={`tab-btn ${activeTab === 'cdr' ? 'active' : ''}`} 
+          onClick={() => setActiveTab('cdr')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
+            background: activeTab === 'cdr' ? 'rgba(255,255,255,0.1)' : 'transparent',
+            border: 'none', borderRadius: '4px', color: activeTab === 'cdr' ? '#fff' : '#8892a4',
+            cursor: 'pointer', transition: 'all 0.2s', justifyContent: isMobile ? 'flex-start' : 'center'
+          }}
+        >
+          <PhoneCall size={16} />
+          Call Analysis
         </button>
       </div>
     </nav>

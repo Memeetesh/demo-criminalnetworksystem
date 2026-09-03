@@ -75,3 +75,30 @@ def get_emails():
 def get_money():
     """Return all extracted money/currency amounts."""
     return jsonify(state.pattern_results.get('money', []))
+
+
+@pattern_bp.route('/dates', methods=['GET'])
+def get_dates():
+    """Return all extracted dates."""
+    return jsonify(state.pattern_results.get('dates', []))
+
+
+@pattern_bp.route('/all', methods=['GET'])
+def get_all_patterns():
+    """Return all extracted patterns with category counts."""
+    results = state.pattern_results
+    return jsonify({
+        'phones': results.get('phones', []),
+        'vehicles': results.get('vehicles', []),
+        'emails': results.get('emails', []),
+        'money': results.get('money', []),
+        'dates': results.get('dates', []),
+        'counts': {
+            'phones': len(results.get('phones', [])),
+            'vehicles': len(results.get('vehicles', [])),
+            'emails': len(results.get('emails', [])),
+            'money': len(results.get('money', [])),
+            'dates': len(results.get('dates', []))
+        }
+    })
+

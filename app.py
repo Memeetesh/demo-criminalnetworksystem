@@ -18,12 +18,14 @@ def create_app():
     from backend.api.network_routes import network_bp
     from backend.api.analysis_routes import analysis_bp
     from backend.api.pattern_routes import pattern_bp
+    from backend.api.cdr_routes import cdr_bp
 
     app.register_blueprint(upload_bp)
     app.register_blueprint(entity_bp)
     app.register_blueprint(network_bp)
     app.register_blueprint(analysis_bp)
     app.register_blueprint(pattern_bp)
+    app.register_blueprint(cdr_bp)
 
     @app.errorhandler(400)
     def bad_request(error):
